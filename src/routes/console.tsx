@@ -124,7 +124,6 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
 
   const { definitions, kpiValues, updateKPI: updateArenaKPI, submitEODReport } = useArenaOS(employee.id, databaseRole);
 
-  const roleKey = role.playbookTitle.toLowerCase().replace(/ /g, '_');
   const eodFields = ARENA_EOD_CONFIGS[roleKey] || ARENA_EOD_CONFIGS.recruiter; // fallback
 
   const [decisionInput, setDecisionInput] = useState("");
