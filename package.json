@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && mv dist/client/_shell.html dist/client/index.html",
+    "build": "vite build && node -e \"const fs = require('fs'); const p = 'dist/client/_shell.html'; if (fs.existsSync(p)) fs.renameSync(p, 'dist/client/index.html')\"",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
