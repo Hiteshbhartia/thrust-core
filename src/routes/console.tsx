@@ -444,12 +444,12 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
                   Preview
                 </button>
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     const txt = `EOD Report (${role.playbookTitle}):\n` + 
                       eodFields.map(f => `${f.label}: ${state.reportData[f.key] || 0}`).join('\n');
                     navigator.clipboard.writeText(txt);
-                    // Also submit to database
-                    submitEODReport(state.reportData);
+                    await saveReport(state.reportData);
+                    alert('EOD Report submitted and copied to clipboard!');
                   }}
                   className="flex-1 h-10 bg-[#FF4D00] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#FF4D00]/90 transition-all"
                 >

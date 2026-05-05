@@ -78,19 +78,32 @@ function ArenaAdmin() {
       alert("Please fill in both the internal name and UI label.");
       return;
     }
+    // Check for duplicate kpi_name in same role (only for new KPIs)
+    if (!kpi.id) {
+      const duplicate = definitions.find(d => d.kpi_name === kpi.kpi_name && d.role === kpi.role);
+      if (duplicate) {
+        alert(`A KPI with key "${kpi.kpi_name}" already exists for this role. Use a different internal name.`);
+        return;
+      }
+    }
     const { error } = await manageKPIDefinition(kpi);
     if (error) {
       alert("Database Error: " + error.message);
     } else {
       setEditingId(null);
+      setNewKpi({ role: 'recruiter', type: 'number', is_active: true, default_target: 0, order_index: 0 });
       fetchDefs();
     }
   };
 
   const handleSaveSprint = async () => {
-    if (!newSprint.sprint_name) return;
+    if (!newSprint.sprint_name.trim()) {
+      alert('Sprint name cannot be empty.');
+      return;
+    }
     await manageSprint({ ...newSprint, role: selectedRoleForSprint });
     setIsSprintModalOpen(false);
+    setNewSprint({ sprint_name: '', start_time: '10:00', end_time: '11:00', role: '' });
     fetchSprints();
   };
 
