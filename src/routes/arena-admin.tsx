@@ -131,7 +131,7 @@ function ArenaAdmin() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">Internal Name (key)</label>
-                  <Input placeholder="e.g. interviews_done" onChange={e => setNewKpi({...newKpi, kpi_name: e.target.value})} />
+                  <Input placeholder="e.g. interviews_done" value={newKpi.kpi_name || ""} onChange={e => setNewKpi({...newKpi, kpi_name: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">UI Label</label>

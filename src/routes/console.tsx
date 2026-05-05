@@ -122,7 +122,7 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
     config.sprints.map(s => s.number)
   );
 
-  const { definitions, kpiValues, updateKPI: updateArenaKPI, submitEODReport } = useArenaOS(employee.id, databaseRole);
+  const { definitions, kpiValues, sprintDefinitions, updateKPI: updateArenaKPI, submitEODReport } = useArenaOS(employee.id, databaseRole);
 
   const eodFields = ARENA_EOD_CONFIGS[roleKey] || ARENA_EOD_CONFIGS.recruiter; // fallback
 
@@ -276,14 +276,39 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
             </div>
             
             <div className="space-y-4">
-              {config.sprints.map(sprint => (
-                <SprintCard 
-                  key={sprint.number}
-                  {...sprint}
-                  isDone={state.sprints[sprint.number]?.isDone || false}
-                  onToggle={() => updateSprint(sprint.number, !state.sprints[sprint.number]?.isDone)}
-                />
-              ))}
+              {sprintDefinitions && sprintDefinitions.length > 0 ? (
+                sprintDefinitions.map((sprint: any, index: number) => (
+                  <div key={sprint.id} className={`p-6 rounded-2xl border transition-all ${state.sprints[index]?.isDone ? 'bg-success/[0.02] border-success/20' : 'bg-card border-border shadow-sm'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#FF4D00]">SPRINT {index + 1}</div>
+                          <div className="text-[10px] font-mono font-bold text-muted-foreground">{sprint.start_time} – {sprint.end_time}</div>
+                        </div>
+                        <h4 className="text-xl font-bold tracking-tight">{sprint.sprint_name}</h4>
+                      </div>
+                      <button
+                        onClick={() => updateSprint(index, !state.sprints[index]?.isDone)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                          state.sprints[index]?.isDone ? 'bg-success text-white' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
+                        }`}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {state.sprints[index]?.isDone ? 'Done' : 'Mark done'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                config.sprints.map(sprint => (
+                  <SprintCard 
+                    key={sprint.number}
+                    {...sprint}
+                    isDone={state.sprints[sprint.number]?.isDone || false}
+                    onToggle={() => updateSprint(sprint.number, !state.sprints[sprint.number]?.isDone)}
+                  />
+                ))
+              )}
             </div>
           </section>
 

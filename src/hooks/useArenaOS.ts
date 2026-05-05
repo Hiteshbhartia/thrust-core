@@ -34,6 +34,7 @@ export function useArenaOS(userId?: string, role?: string) {
   const [definitions, setDefinitions] = useState<ArenaKPIDefinition[]>([]);
   const [kpiValues, setKpiValues] = useState<ArenaKPIValue[]>([]);
   const [alerts, setAlerts] = useState<ArenaAlert[]>([]);
+  const [sprintDefinitions, setSprintDefinitions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +48,18 @@ export function useArenaOS(userId?: string, role?: string) {
       if (data) setDefinitions(data);
     };
 
-    // 2. Fetch User KPI Values
+    // 2. Fetch Sprint Definitions
+    const fetchSprints = async () => {
+      if (!role) return;
+      const { data } = await (supabase as any)
+        .from('arena_sprints')
+        .select('*')
+        .eq('role', role)
+        .order('start_time');
+      if (data) setSprintDefinitions(data);
+    };
+
+    // 3. Fetch User KPI Values
     const fetchValues = async () => {
       if (!userId) return;
       const { data } = await (supabase as any)
@@ -58,7 +70,7 @@ export function useArenaOS(userId?: string, role?: string) {
       if (data) setKpiValues(data);
     };
 
-    // 3. Fetch User Alerts
+    // 4. Fetch User Alerts
     const fetchAlerts = async () => {
       if (!userId) return;
       const { data } = await (supabase as any)
@@ -72,7 +84,7 @@ export function useArenaOS(userId?: string, role?: string) {
 
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchDefinitions(), fetchValues(), fetchAlerts()]);
+      await Promise.all([fetchDefinitions(), fetchSprints(), fetchValues(), fetchAlerts()]);
       setLoading(false);
     };
 
@@ -111,15 +123,16 @@ export function useArenaOS(userId?: string, role?: string) {
     if (!userId || !role) return;
     const { error } = await (supabase as any)
       .from('arena_reports')
-      .insert([{
+      .upsert([{
         user_id: userId,
         role: role,
-        report_json: reportData
-      }]);
+        report_json: reportData,
+        submitted_at: new Date().toISOString()
+      }], { onConflict: 'user_id,role' });
     return { error };
   };
 
-  return { definitions, kpiValues, alerts, loading, updateKPI, submitEODReport };
+  return { definitions, sprintDefinitions, kpiValues, alerts, loading, updateKPI, submitEODReport };
 }
 
 // Admin Hook
@@ -129,17 +142,9 @@ export function useArenaAdmin() {
 
   const fetchAdminData = async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
+    const { data } = await (supabase as any)
       .from('profiles')
-      .select(`
-        id, 
-        full_name,
-        role,
-        arena_kpis ( kpi_name, current_value, is_hit, date ),
-        arena_alerts ( id, type, severity, resolved )
-      `)
-      .eq('arena_kpis.date', new Date().toISOString().split('T')[0]);
-    
+      .select('id, full_name, role');
     if (data) setAllUsersPerformance(data);
     setLoading(false);
   };
