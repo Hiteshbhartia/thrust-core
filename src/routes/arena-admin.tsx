@@ -52,7 +52,12 @@ function ArenaAdmin() {
   const roles = ['recruiter', 'coach', 'floor_lead_tour', 'comm_shield', 'hr', 'floor_lead_office', 'owner'];
 
   const fetchDefs = async () => {
-    const { data, error } = await (supabase as any).from('arena_kpi_definitions').select('*').order('role').order('order_index');
+    const { data, error } = await (supabase as any)
+      .from('arena_kpi_definitions')
+      .select('*')
+      .eq('is_active', true)
+      .order('role')
+      .order('order_index');
     if (data) setDefinitions(data);
     if (error) console.error("Error fetching definitions:", error);
   };
@@ -192,7 +197,19 @@ function ArenaAdmin() {
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" onClick={() => handleSave({...def, is_active: false})}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 hover:text-destructive" 
+                        onClick={async () => {
+                          if (confirm("Delete this KPI?")) {
+                            await manageKPIDefinition({...def, is_active: false});
+                            fetchDefs();
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -262,9 +279,28 @@ function ArenaAdmin() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {sprints.filter(s => s.role === r).map(s => (
-                    <div key={s.id} className="flex justify-between items-center p-2 rounded bg-secondary/10 border border-border/50">
-                      <span className="text-xs font-bold">{s.sprint_name}</span>
-                      <span className="text-[10px] font-mono opacity-60">{s.start_time} - {s.end_time}</span>
+                    <div key={s.id} className="group flex justify-between items-center p-2 rounded bg-secondary/10 border border-border/50">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold">{s.sprint_name}</span>
+                        <span className="text-[10px] font-mono opacity-60">{s.start_time} - {s.end_time}</span>
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-5 w-5 h-5 w-5" onClick={() => {
+                          setNewSprint(s);
+                          setSelectedRoleForSprint(r);
+                          setIsSprintModalOpen(true);
+                        }}>
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 hover:text-destructive" onClick={async () => {
+                          if (confirm("Delete this sprint?")) {
+                            await (supabase as any).from('arena_sprints').delete().eq('id', s.id);
+                            fetchSprints();
+                          }
+                        }}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {sprints.filter(s => s.role === r).length === 0 && (
