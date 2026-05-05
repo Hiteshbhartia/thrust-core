@@ -112,6 +112,9 @@ function OperatorConsole() {
 function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employee: Employee; onBack?: () => void }) {
   const config = PLAYBOOK_CONFIGS[role.playbookTitle] || DEFAULT_CONFIG;
   
+  const roleKey = role.playbookTitle.toLowerCase().replace(/ /g, '_');
+  const databaseRole = roleKey === 'talent_engine' || roleKey === 'operator_day' ? 'recruiter' : roleKey;
+
   const { data: state, updateKPI, updateSprint, addDecision, updateReport, toggleShieldMode } = useConsoleState(
     employee.id,
     config.title,
@@ -119,7 +122,7 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
     config.sprints.map(s => s.number)
   );
 
-  const { definitions, kpiValues, updateKPI: updateArenaKPI, submitEODReport } = useArenaOS(employee.id, role.playbookTitle.toLowerCase().replace(/ /g, '_'));
+  const { definitions, kpiValues, updateKPI: updateArenaKPI, submitEODReport } = useArenaOS(employee.id, databaseRole);
 
   const roleKey = role.playbookTitle.toLowerCase().replace(/ /g, '_');
   const eodFields = ARENA_EOD_CONFIGS[roleKey] || ARENA_EOD_CONFIGS.recruiter; // fallback

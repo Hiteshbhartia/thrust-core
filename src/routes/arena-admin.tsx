@@ -130,7 +130,11 @@ function ArenaAdmin() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">UI Label</label>
-                  <Input placeholder="e.g. Interviews Done" onChange={e => setNewKpi({...newKpi, label: e.target.value})} />
+                  <Input placeholder="e.g. Interviews Done" value={newKpi.label || ""} onChange={e => setNewKpi({...newKpi, label: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">Target</label>
+                  <Input type="number" placeholder="10" value={newKpi.default_target || 0} onChange={e => setNewKpi({...newKpi, default_target: parseInt(e.target.value)})} />
                 </div>
                 <Button 
                   className="bg-[#FF4D00] hover:bg-[#FF4D00]/90 font-bold" 
