@@ -13,6 +13,7 @@ import { useConsoleState } from "@/lib/console-store";
 import { ARENA_EOD_CONFIGS } from "@/lib/arena-eod-configs";
 import { useArenaOS } from "@/hooks/useArenaOS";
 import { Link } from "@tanstack/react-router";
+import { getCommWindows, getCommWindowStatuses, setCommWindowStatus } from "@/lib/comm-db";
 
 export const Route = createFileRoute("/console")({
   component: OperatorConsole,
@@ -127,6 +128,30 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
   const eodFields = ARENA_EOD_CONFIGS[roleKey] || ARENA_EOD_CONFIGS.recruiter; // fallback
 
   const [decisionInput, setDecisionInput] = useState("");
+  const [commWindows, setCommWindows] = useState<any[]>([]);
+  const [commStatuses, setCommStatuses] = useState<Record<string, string>>({});
+
+  // Load comm windows and today's statuses
+  useState(() => {
+    const load = async () => {
+      const [windows, statuses] = await Promise.all([
+        getCommWindows(databaseRole),
+        getCommWindowStatuses(employee.id),
+      ]);
+      setCommWindows(windows);
+      const statusMap: Record<string, string> = {};
+      statuses.forEach((s: any) => { statusMap[s.window_id] = s.status; });
+      setCommStatuses(statusMap);
+    };
+    load();
+  });
+
+  const handleCommStatus = async (windowId: string, status: 'sent' | 'missed') => {
+    const current = commStatuses[windowId];
+    const next = current === status ? 'pending' : status;
+    setCommStatuses(prev => ({ ...prev, [windowId]: next }));
+    await setCommWindowStatus(employee.id, windowId, next as any);
+  };
 
   const dayScore = useMemo(() => {
     const total = config.kpis.length;
@@ -329,21 +354,52 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
               )}
             </div>
             <div className="space-y-2">
-              {config.commWindows.map((win, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm group hover:border-[#FF4D00]/30 transition-all">
-                  <div className="flex items-center gap-4">
-                    <MessageCircle className="h-5 w-5 text-muted-foreground/40 group-hover:text-[#FF4D00]" />
-                    <div>
-                      <div className="text-sm font-bold">{win.label}</div>
-                      <div className="text-[10px] font-mono text-muted-foreground">{win.channel} · scheduled {win.time}</div>
+              {(commWindows.length > 0 ? commWindows : config.commWindows.map((w, i) => ({ id: `static-${i}`, ...w, scheduled_time: w.time }))).map((win: any) => {
+                const status = commStatuses[win.id] || 'pending';
+                return (
+                  <div key={win.id} className={`flex items-center justify-between p-4 rounded-xl border shadow-sm group transition-all ${
+                    status === 'sent' ? 'bg-success/[0.03] border-success/30' :
+                    status === 'missed' ? 'bg-destructive/[0.03] border-destructive/30' :
+                    'bg-card border-border hover:border-[#FF4D00]/30'
+                  }`}>
+                    <div className="flex items-center gap-4">
+                      <MessageCircle className={`h-5 w-5 ${
+                        status === 'sent' ? 'text-success' :
+                        status === 'missed' ? 'text-destructive' :
+                        'text-muted-foreground/40 group-hover:text-[#FF4D00]'
+                      }`} />
+                      <div>
+                        <div className="text-sm font-bold">{win.label}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground">{win.channel} · scheduled {win.scheduled_time || win.time}</div>
+                      </div>
                     </div>
+                    {win.id?.startsWith('static-') ? (
+                      <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-destructive">
+                        <AlertCircle className="h-3 w-3" /> OVERDUE
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleCommStatus(win.id, 'sent')}
+                          className={`px-3 h-8 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all border ${
+                            status === 'sent'
+                              ? 'bg-success text-white border-success'
+                              : 'bg-success/10 text-success border-success/30 hover:bg-success/20'
+                          }`}
+                        >✓ Sent</button>
+                        <button
+                          onClick={() => handleCommStatus(win.id, 'missed')}
+                          className={`px-3 h-8 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all border ${
+                            status === 'missed'
+                              ? 'bg-destructive text-white border-destructive'
+                              : 'bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20'
+                          }`}
+                        >✗ Missed</button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-destructive">
-                    <AlertCircle className="h-3 w-3" />
-                    OVERDUE
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         </div>

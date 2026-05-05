@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAttendanceState } from '@/hooks/useAttendance';
 import { Navigate } from '@tanstack/react-router';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { createCommWindow, updateCommWindow, deleteCommWindow, getCommWindows } from '@/lib/comm-db';
 
 export const Route = createFileRoute("/arena-admin")({
   beforeLoad: ({ context }: any) => {
@@ -47,6 +48,12 @@ function ArenaAdmin() {
     default_target: 0,
     order_index: 0
   });
+  const [commWindows, setCommWindows] = useState<any[]>([]);
+  const [editingWindowId, setEditingWindowId] = useState<string | null>(null);
+  const [newWindow, setNewWindow] = useState({ role: 'recruiter', label: '', channel: '', scheduled_time: '10:00 AM' });
+  const [isWindowModalOpen, setIsWindowModalOpen] = useState(false);
+  const [selectedRoleForWindow, setSelectedRoleForWindow] = useState('');
+
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const roles = ['recruiter', 'coach', 'floor_lead_tour', 'comm_shield', 'hr', 'floor_lead_office', 'owner'];
@@ -67,11 +74,18 @@ function ArenaAdmin() {
     if (data) setSprints(data);
   };
 
+  const fetchCommWindows = async () => {
+    const all = await Promise.all(roles.map(r => getCommWindows(r)));
+    setCommWindows(all.flat());
+  };
+
   useEffect(() => {
     fetchDefs();
     fetchAdminData();
     fetchSprints();
+    fetchCommWindows();
   }, []);
+
 
   const handleSave = async (kpi: Partial<ArenaKPIDefinition>) => {
     if (!kpi.kpi_name || !kpi.label) {
@@ -122,6 +136,7 @@ function ArenaAdmin() {
           <TabsTrigger value="kpis" className="rounded-lg px-6">KPI DEFINITIONS</TabsTrigger>
           <TabsTrigger value="performance" className="rounded-lg px-6">TEAM PERFORMANCE</TabsTrigger>
           <TabsTrigger value="sprints" className="rounded-lg px-6">SPRINT PLANS</TabsTrigger>
+          <TabsTrigger value="commwindows" className="rounded-lg px-6">COMM WINDOWS</TabsTrigger>
         </TabsList>
 
         <TabsContent value="kpis" className="mt-6 space-y-6">
@@ -349,6 +364,47 @@ function ArenaAdmin() {
           </div>
           <DialogFooter>
             <Button className="bg-[#FF4D00] hover:bg-[#FF4D00]/90 font-bold w-full" onClick={handleSaveSprint}>SAVE SPRINT</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comm Window Dialog */}
+      <Dialog open={isWindowModalOpen} onOpenChange={setIsWindowModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="font-black uppercase tracking-tight">
+              {editingWindowId ? 'Edit' : 'New'} Window for {selectedRoleForWindow.replace(/_/g, ' ')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">Window Label</label>
+              <Input placeholder="e.g. Morning Brief" value={newWindow.label} onChange={e => setNewWindow({...newWindow, label: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">Channel</label>
+              <Input placeholder="e.g. WhatsApp Group" value={newWindow.channel} onChange={e => setNewWindow({...newWindow, channel: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">Scheduled Time</label>
+              <Input placeholder="e.g. 10:30 AM" value={newWindow.scheduled_time} onChange={e => setNewWindow({...newWindow, scheduled_time: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button className="bg-[#FF4D00] hover:bg-[#FF4D00]/90 font-bold w-full" onClick={async () => {
+              if (!newWindow.label.trim() || !newWindow.channel.trim()) {
+                alert('Label and Channel are required.');
+                return;
+              }
+              if (editingWindowId) {
+                await updateCommWindow(editingWindowId, { label: newWindow.label, channel: newWindow.channel, scheduled_time: newWindow.scheduled_time });
+              } else {
+                await createCommWindow({ ...newWindow, role: selectedRoleForWindow });
+              }
+              setIsWindowModalOpen(false);
+              setEditingWindowId(null);
+              fetchCommWindows();
+            }}>SAVE WINDOW</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
