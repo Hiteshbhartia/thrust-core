@@ -8,4 +8,31 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
   cloudflare: false,
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        onwarn(warning, warn) {
+          // Suppress specific warnings about unused imports in external modules
+          if (
+            warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
+            warning.exporter === '@tanstack/router-core'
+          ) {
+            return;
+          }
+          warn(warning);
+        },
+        output: {
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('lucide-react')) return 'lucide';
+              if (id.includes('recharts')) return 'recharts';
+              if (id.includes('@tanstack')) return 'tanstack';
+              return 'vendor';
+            }
+          },
+        },
+      },
+    },
+  },
 });
