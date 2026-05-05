@@ -132,7 +132,30 @@ function ArenaAdmin() {
                   <label className="text-[10px] font-mono font-bold uppercase text-muted-foreground">UI Label</label>
                   <Input placeholder="e.g. Interviews Done" onChange={e => setNewKpi({...newKpi, label: e.target.value})} />
                 </div>
-                <Button className="bg-[#FF4D00] hover:bg-[#FF4D00]/90 font-bold" onClick={() => handleSave(newKpi)}>Create KPI</Button>
+                <Button 
+                  className="bg-[#FF4D00] hover:bg-[#FF4D00]/90 font-bold" 
+                  onClick={() => handleSave(newKpi)}
+                >
+                  {editingId ? "Update KPI" : "Create KPI"}
+                </Button>
+                {editingId && (
+                  <Button 
+                    variant="ghost" 
+                    className="font-bold"
+                    onClick={() => {
+                      setEditingId(null);
+                      setNewKpi({
+                        role: 'recruiter',
+                        type: 'number',
+                        is_active: true,
+                        default_target: 0,
+                        order_index: 0
+                      });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -154,7 +177,17 @@ function ArenaAdmin() {
                     <TableCell className="font-bold">{def.label}</TableCell>
                     <TableCell>{def.default_target}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-[#FF4D00]"><Edit2 className="h-3.5 w-3.5" /></Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 hover:text-[#FF4D00]"
+                        onClick={() => {
+                          setEditingId(def.id);
+                          setNewKpi(def);
+                        }}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" onClick={() => handleSave({...def, is_active: false})}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </TableCell>
                   </TableRow>

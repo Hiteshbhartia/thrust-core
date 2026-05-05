@@ -235,15 +235,31 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {config.kpis.map(kpi => (
-                <KPICard 
-                  key={kpi.id}
-                  {...kpi} 
-                  value={state.kpis[kpi.id]?.value || 0}
-                  isDone={state.kpis[kpi.id]?.isDone || false}
-                  onUpdate={(val, done) => updateKPI(kpi.id, val, done)}
-                />
-              ))}
+              {definitions.length > 0 ? (
+                definitions.map(kpi => (
+                  <KPICard 
+                    key={kpi.id}
+                    id={kpi.id}
+                    title={kpi.label}
+                    subtitle={kpi.kpi_name}
+                    target={kpi.default_target}
+                    type={kpi.type as any}
+                    value={state.kpis[kpi.kpi_name]?.value || 0}
+                    isDone={state.kpis[kpi.kpi_name]?.isDone || false}
+                    onUpdate={(val, done) => updateKPI(kpi.kpi_name, val, done)}
+                  />
+                ))
+              ) : (
+                config.kpis.map(kpi => (
+                  <KPICard 
+                    key={kpi.id}
+                    {...kpi} 
+                    value={state.kpis[kpi.id]?.value || 0}
+                    isDone={state.kpis[kpi.id]?.isDone || false}
+                    onUpdate={(val, done) => updateKPI(kpi.id, val, done)}
+                  />
+                ))
+              )}
             </div>
           </section>
 
