@@ -112,14 +112,14 @@ function OperatorConsole() {
 function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employee: Employee; onBack?: () => void }) {
   const config = PLAYBOOK_CONFIGS[role.playbookTitle] || DEFAULT_CONFIG;
   
-  const { data: state, updateSprint, addDecision, updateReport, toggleShieldMode } = useConsoleState(
+  const { data: state, updateKPI, updateSprint, addDecision, updateReport, toggleShieldMode } = useConsoleState(
     employee.id,
     config.title,
     config.kpis.map(k => k.id),
     config.sprints.map(s => s.number)
   );
 
-  const { definitions, kpiValues, updateKPI, submitEODReport } = useArenaOS(employee.id, role.playbookTitle.toLowerCase().replace(/ /g, '_'));
+  const { definitions, kpiValues, updateKPI: updateArenaKPI, submitEODReport } = useArenaOS(employee.id, role.playbookTitle.toLowerCase().replace(/ /g, '_'));
 
   const roleKey = role.playbookTitle.toLowerCase().replace(/ /g, '_');
   const eodFields = ARENA_EOD_CONFIGS[roleKey] || ARENA_EOD_CONFIGS.recruiter; // fallback
