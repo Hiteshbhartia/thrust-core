@@ -1,7 +1,8 @@
 // Comm Windows — DB service
 // Fetches window definitions and per-employee daily status
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as _supabase } from "@/integrations/supabase/client";
+const supabase = _supabase as any;
 
 const today = () => new Date().toISOString().split("T")[0];
 

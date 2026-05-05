@@ -116,7 +116,7 @@ function OperatorDashboard({ role, employee, onBack }: { role: Playbook; employe
   const roleKey = role.playbookTitle.toLowerCase().replace(/ /g, '_');
   const databaseRole = roleKey === 'talent_engine' || roleKey === 'operator_day' ? 'recruiter' : roleKey;
 
-  const { data: state, updateKPI, updateSprint, addDecision, updateReport, toggleShieldMode } = useConsoleState(
+  const { data: state, updateKPI, updateSprint, addDecision, updateReport, toggleShieldMode, saveReport } = useConsoleState(
     employee.id,
     config.title,
     config.kpis.map(k => k.id),

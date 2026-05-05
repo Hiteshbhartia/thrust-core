@@ -2,7 +2,8 @@
 // Full CRUD for KPI progress, sprints, decisions, EOD reports, shield mode
 // Falls back to localStorage if Supabase is unavailable
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as _supabase } from "@/integrations/supabase/client";
+const supabase = _supabase as any;
 
 const today = () => new Date().toISOString().split("T")[0];
 
